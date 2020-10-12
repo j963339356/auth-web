@@ -1,0 +1,64 @@
+@import './variable.scss';
+
+//header
+.header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: $headerHeight;
+    margin: 0 auto;
+    padding: 0 15px;
+    background: $headerFooterBackgroup;
+    display: flex;
+    z-index: 1000;
+    line-height: 4;
+    font-size: 16px;
+    color: rgba(255,255,255,.7);
+    //左边
+    .left{
+        width: 200px;
+        margin: 0;
+        img {
+            height: $headerHeight;
+            display: block;
+            float: left;
+            // width: 40%;
+        }
+        p{            
+            float: left;
+            margin-left: 10px;
+            line-height: 0;
+            font-family: "KaiTi";
+            font-size: 30px;    
+            color: #67C23A;       
+        }
+        a{
+            outline:none;
+            text-decoration: none;
+            color: white;
+          }
+        &:hover{
+            opacity: 0.8;
+        }    
+        &:active{
+            color: white;
+        }
+    }   
+    //中间
+    //右边 
+    .right{
+        width: 20%;
+        overflow: hidden;
+        .el-dropdown {
+            color: white;
+          }
+        .el-dropdown-link {
+            cursor: pointer;
+           //   color: #409eff;
+        }
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+    }
+}

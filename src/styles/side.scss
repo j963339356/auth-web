@@ -1,0 +1,67 @@
+@import './variable.scss';
+
+//sidebar侧边栏
+.sidebar{
+    .horizontal-collapse-transition {
+        transition: 0s width ease-in-out, 0s padding-left ease-in-out, 0s padding-right ease-in-out;
+      }
+    transition: width .28s;
+    position: absolute;
+    top: $headerHeight;
+    left: 0;
+    bottom: 0;
+    width: $sidebarWidth;
+    // padding-right: 17px;	/*隐藏滚动条*/
+    overflow-x: hidden;
+    background: #393D49;
+    z-index: 999;
+    .collapse{
+        text-align: center;
+        cursor: pointer;
+    }
+    .el-menu{
+        border-right: solid 0px #e6e6e6;
+    }
+}
+
+//收起时侧边栏样式
+.hideSidebar {  
+    $sidebarHideWidth: 45px;
+    .sidebar {
+      width: $sidebarHideWidth !important;
+    }
+    .main{    
+      transition: left .28s;
+      left: $sidebarHideWidth;
+    }
+    .footer{   
+      transition: left .28s;
+      left: $sidebarHideWidth;
+    }
+    .collapse{
+      transition: left .28s;
+      width: $sidebarHideWidth;
+    }
+    .submenu-title-noDropdown {
+      padding-left: 10px !important;
+      position: relative;
+      .el-tooltip {
+        padding: 0 10px !important;
+      }
+    }
+    .el-submenu {
+      &>.el-submenu__title {
+        padding-left: 10px !important;
+        &>span {
+          height: 0;
+          width: 0;
+          overflow: hidden;
+          visibility: hidden;
+          display: inline-block;
+        }
+        .el-submenu__icon-arrow {
+          display: none;
+        }
+      }
+    }
+  }

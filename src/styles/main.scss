@@ -1,0 +1,20 @@
+@import './variable.scss';
+
+// 后台主界面样式
+.main{
+    position: absolute;
+    top: $headerHeight;
+    right: 0;
+    left: $sidebarWidth;
+    transition: left .28s;
+    bottom: 50px;
+    // margin-right: -17px;	/*隐藏滚动条*/
+    overflow-x: hidden;
+    background: #F2F2F2;    //背景底色
+    .main-cotainer{
+        margin: 15px;
+        padding: 15px;
+        background: #fff;
+        box-shadow: 0 1px 2px 0 rgba(0,0,0,.05)
+    }
+}
