@@ -117,9 +117,9 @@ export default {
       queryData: {
         //查询条件
         queryData: {
-          username: null,
-          isactive: null,
-          expirydate: null
+          username: "",
+          isactive: "",
+          expirydate: ""
         }
       },
       pageNation: {

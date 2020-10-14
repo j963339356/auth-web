@@ -90,5 +90,7 @@ export default {
   border-bottom-left-radius: 10%;
   border-bottom-right-radius: 10%;
   top: -1px;
+  font-family: "Hiragino Sans GB";
+  font-size: small;
 }
 </style>

@@ -1,9 +1,9 @@
 <template>
-  <!-- 资源管理 -->
+  <!-- 模块管理 -->
   <div>
     <!-- 查询条件 -->
     <el-form :inline="true" :model="queryData">
-      <el-form-item label="资源名称">
+      <el-form-item label="模块名称">
         <el-input
           v-model="queryData.queryData.name"
           placeholder="请输入内容"
@@ -20,6 +20,13 @@
           <el-option label="全部" value></el-option>
           <el-option label="已激活" :value="1"></el-option>
           <el-option label="未激活" :value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否隐藏">
+        <el-select v-model="queryData.queryData.hidden" placeholder="是否隐藏">
+          <el-option label="全部" value></el-option>
+          <el-option label="显示" :value="1"></el-option>
+          <el-option label="隐藏" :value="0"></el-option>
         </el-select>
       </el-form-item>
       <div class="right">
@@ -52,34 +59,17 @@
     >
       <!-- <el-table-column type="selection" width="50" align="center"></el-table-column> -->
       <el-table-column
-        prop="id"
-        label="编号"
-        show-overflow-tooltip
-        align="center"
-      ></el-table-column>
-      <el-table-column
-        prop="code"
-        label="资源代码"
-        show-overflow-tooltip
-        align="center"
-      ></el-table-column>
-      <el-table-column
         prop="name"
-        label="资源名称"
+        label="模块名称"
         show-overflow-tooltip
         align="center"
       ></el-table-column>
       <el-table-column
         prop="url"
-        label="资源路径"
+        label="模块路径"
         show-overflow-tooltip
         align="center"
-      ></el-table-column> 
-      <el-table-column label="所属菜单" show-overflow-tooltip align="center">
-        <template slot-scope="scope">
-          <el-tag :type="'success'" disable-transitions >{{scope.row.menuId | getMenuFilter(menuList)}}</el-tag>
-        </template>
-      </el-table-column>
+      ></el-table-column>
       <el-table-column        
         label="是否激活"
         show-overflow-tooltip
@@ -92,9 +82,16 @@
           >{{scope.row.isactive==1 ? '已激活' : '未激活'}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="请求类型" show-overflow-tooltip align="center">
+      <el-table-column        
+        label="是否隐藏"
+        show-overflow-tooltip
+        align="center"
+      >
         <template slot-scope="scope">
-          <el-tag :type="'success'" disable-transitions >{{scope.row.request.toUpperCase()}}</el-tag>
+          <el-tag
+            :type="scope.row.hidden == 1 ? 'success' : 'danger'"
+            disable-transitions
+          >{{scope.row.hidden==1 ? '显示' : '隐藏'}}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="250" align="center">
@@ -132,13 +129,13 @@
     </div>
 
     <!-- 弹窗-添加 -->
-    <resource-detail
+    <module-detail
       :visible="dialogAddVisible"
       :isEdit="false"
       @close="dialogCloce"
     />
     <!-- 弹窗-修改 -->
-    <resource-detail
+    <module-detail
       :visible="dialogEditVisible"
       :isEdit="true"
       @close="dialogCloce"
@@ -148,13 +145,13 @@
 </template>
 
 <script>
-import { fetchList, deleteResource } from "@/api/resource";
+import { fetchList, deleteModule } from "@/api/module";
 import { listAll } from "@/api/menu";
-import ResourceDetail from "./resourceDetail";
+import ModuleDetail from "./moduleDetail";
 
 export default {
-  name: "Resource",
-  components: { ResourceDetail },
+  name: "Module",
+  components: { ModuleDetail },
   props: [],
   data() {
     return {
@@ -167,6 +164,7 @@ export default {
           name: "",
           url: "",
           isactive: "",
+          hidden: ""
         },
       },
       pageNation: {
@@ -201,7 +199,7 @@ export default {
     deleteRow(index, rows) {
       //删除单条数据按钮
       this.$confirm("是否确认删除？").then(() => {
-        deleteResource(rows.id).then((response) => {
+        deleteModule(rows.id).then((response) => {
           if (response.code == 200) {
             this.$message({
               message: "删除成功",
@@ -234,7 +232,7 @@ export default {
       //修改按钮
       this.dialogEditVisible = true;
       this.$refs.edit.id = id;
-      this.$refs.edit.editGetResource();
+      this.$refs.edit.editGetModule();
     },
     handleSelectionChange(val) {
       //多选

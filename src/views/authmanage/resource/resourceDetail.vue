@@ -1,40 +1,66 @@
 <template>
   <!-- 添加菜单 -->
   <div>
-    <el-dialog title="添加菜单" :visible="visible" :before-close="handleClose">
-      <el-form :model="menu" ref="menuFrom" label-width="150px" :rules="rules">
+    <el-dialog
+      title="添加资源"
+      :visible="visible"
+      :before-close="handleClose"
+      width="40%"
+    >
+      <el-form
+        :model="resource"
+        ref="resourceFrom"
+        label-width="150px"
+        :rules="rules"
+      >
         <el-form-item label="编号" prop="id" required>
-          <el-input v-model="menu.id"></el-input>
-        </el-form-item>        
-        <el-form-item label="菜单名称" prop="title" required>
-          <el-input v-model="menu.title"></el-input>
+          <el-input v-model="resource.id" class="input-width"></el-input>
         </el-form-item>
-        <el-form-item label="上级菜单">
-          <el-select v-model="menu.pid" placeholder="请选择菜单">
-            <el-option
-              v-for="item in selectMenuList"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            >
-            </el-option>
+        <el-form-item label="资源名称" prop="name" required>
+          <el-input v-model="resource.name" class="input-width"></el-input>
+        </el-form-item>
+        <el-form-item label="资源代码" prop="code" required>
+          <el-input v-model="resource.code" class="input-width"></el-input>
+        </el-form-item>
+        <el-form-item label="URL" prop="url" required>
+          <el-input v-model="resource.url" class="input-width"></el-input>
+        </el-form-item>
+        <el-form-item label="所属菜单" required>
+          <!-- <el-select v-model="resource.menuId" placeholder="所属菜单"> -->
+          <!-- <el-option v-for="item in categoryOptions"
+                         :key="item.id"
+                         :label="item.title"
+                         :value="item.id">
+              </el-option> -->
+          <!-- </el-select> -->
+          <el-cascader
+            v-model="resource.menuId"
+            :options="categoryOptions"
+            :props="{ checkStrictly: true, emitPath: false }"
+            clearable
+          ></el-cascader>
+        </el-form-item>
+        <el-form-item label="是否激活" required>
+          <el-switch
+            v-model="resource.isactive"
+            :active-value="1"
+            :inactive-value="0"
+          ></el-switch>
+        </el-form-item>
+        <el-form-item label="请求类型">
+          <el-select v-model="resource.request" placeholder="请选择菜单">
+            <el-option label="POST" value="post"></el-option>
+            <el-option label="GET" value="get"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="前端名称">
-          <el-input v-model="menu.name"></el-input>
-        </el-form-item>
-        <el-form-item label="前端图标">
-          <el-input v-model="menu.icon" style="width: 80%"></el-input>
-          <i style="margin-left: 8px" :class="menu.icon"></i>
-        </el-form-item>
-        <el-form-item label="是否显示" required>
-          <el-select v-model="menu.hidden" placeholder="是否隐藏">
-            <el-option label="显示" :value="1"></el-option>
-            <el-option label="隐藏" :value="0"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input v-model="menu.sort"></el-input>
+        <el-form-item label="描述">
+          <el-input
+            type="textarea"
+            autosize
+            placeholder="请输入内容"
+            v-model="resource.description"
+            class="input-width"
+          ></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -46,17 +72,19 @@
 </template>
 
 <script>
-  import {fetchList, createMenu, updateMenu, getMenu} from '@/api/menu';
+import { createResource, updateResource, getResource } from "@/api/resource";
+import { listAll, fetchTreeList } from "@/api/menu";
 
 //默认
-const defaultMenu = {
+const defaultResource = {
   id: "",
-  title: "",
-  pid: 0,
   name: "",
-  icon: "",
-  hidden: 1,
-  sort: 0,
+  code: null,
+  url: "",
+  menuId: "",
+  isactive: 1,
+  request: "get",
+  description: "",
 };
 
 export default {
@@ -72,26 +100,20 @@ export default {
       //添加或修改
       type: Boolean,
       default: false,
-    }
+    },
   },
   data() {
     return {
       gutter: 100, //表单间距
       id: null, //打开窗口时查询的id
-      menu: Object.assign({}, defaultMenu),
-      selectMenuList: [],
+      resource: Object.assign({}, defaultResource),
+      categoryOptions: [],
       rules: {
-        title: [
-          { required: true, message: "请输入菜单名称", trigger: "blur" },
-          {
-            min: 2,
-            max: 140,
-            message: "长度在 2 到 140 个字符",
-            trigger: "blur",
-          },
+        menuId: [
+          { required: true, message: "请添加所属菜单", trigger: "blur" },
         ],
         name: [
-          { required: true, message: "请输入前端名称", trigger: "blur" },
+          { required: true, message: "请输入资源名称", trigger: "blur" },
           {
             min: 2,
             max: 140,
@@ -99,8 +121,12 @@ export default {
             trigger: "blur",
           },
         ],
-        icon: [
-          { required: true, message: "请输入前端图标", trigger: "blur" },
+        url: [
+          {
+            required: true,
+            message: "请输入资源代码，格式为/api/menu/listAll",
+            trigger: "blur",
+          },
           {
             min: 2,
             max: 140,
@@ -112,12 +138,15 @@ export default {
     };
   },
   created() {
-    if(!this.isEdit) {
-      this.menu = Object.assign({}, defaultMenu);
+    if (!this.isEdit) {
+      this.resource = Object.assign({}, defaultResource); 
     }
-    this.getSelectMenuList();
+    this.getSelectMenuList();      
   },
-  watch: {},
+  watch: {
+    visible: function (val) {
+    },
+  },
   computed: {},
   methods: {
     handleClose(done) {
@@ -133,14 +162,26 @@ export default {
         .finally(() => {});
     },
     getSelectMenuList() {
-      //获取上级菜单下拉列表
-      fetchList({queryData:{ pid: "0"}, pageSize: 100, pageNum: 1 }).then((response) => {
-        this.selectMenuList = response.data.list;
-        this.selectMenuList.unshift({ id: 0, title: "无上级菜单" });
+      //获取菜单下拉列表
+      fetchTreeList().then((response) => {
+        // console.log(response.data);
+        this.setCascader(this.categoryOptions, response.data);
+        // this.categoryOptions.unshift({ id: 0, title: "无菜单" });
+      });
+    },
+    setCascader(result, data) {
+      data.forEach((element) => {
+        let a = {};
+        a["value"] = element.id;
+        a["label"] = element.title;
+        if (element.children.length > 0) {
+          this.setCascader(a["children"] = [], element.children);
+        }
+        result.push(a);
       });
     },
     handleSave() {
-      this.$refs["menuFrom"].validate((valid) => {
+      this.$refs["resourceFrom"].validate((valid) => {
         if (valid) {
           this.$confirm("是否提交数据", "提示", {
             confirmButtonText: "确定",
@@ -148,18 +189,20 @@ export default {
             type: "warning",
           }).then(() => {
             if (this.isEdit) {
-              updateMenu(this.menu.id, this.menu).then((response) => {
-                this.$message({
-                  message: "修改成功",
-                  type: "success",
-                  duration: 1000,
-                });
-                this.$emit("close", { close: false, query: true });
-              });
+              updateResource(this.resource.id, this.resource).then(
+                (response) => {
+                  this.$message({
+                    message: "修改成功",
+                    type: "success",
+                    duration: 1000,
+                  });
+                  this.$emit("close", { close: false, query: true });
+                }
+              );
             } else {
-              createMenu(this.menu).then((response) => {
-                this.$refs["menuFrom"].resetFields();
-                this.resetForm("menuFrom");
+              createResource(this.resource).then((response) => {
+                this.$refs["resourceFrom"].resetFields();
+                this.resetForm("resourceFrom");
                 this.$message({
                   message: "提交成功",
                   type: "success",
@@ -179,20 +222,21 @@ export default {
         }
       });
     },
-    editGetMenu(){
-        //如果是修改，就获取这个数据填到表中
-        getMenu(this.id).then((response) => {
-          this.menu = response.data;
-        });
-      
+    editGetResource() {
+      //如果是修改，就获取这个数据填到表中
+      getResource(this.id).then((response) => {
+        this.resource = response.data;
+      });
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();
-      this.menu = Object.assign({}, defaultMenu);
-      this.getSelectMenuList();
+      this.resource = Object.assign({}, defaultResource);
     },
   },
 };
 </script>
 <style lang="scss" scoped>
+.input-width {
+  width: 300px;
+}
 </style>

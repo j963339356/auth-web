@@ -1,22 +1,26 @@
 <template>
-  <!-- 资源管理 -->
+  <!-- 角色管理 -->
   <div>
     <!-- 查询条件 -->
     <el-form :inline="true" :model="queryData">
-      <el-form-item label="资源名称">
+      <el-form-item label="角色名称">
         <el-input
           v-model="queryData.queryData.name"
           placeholder="请输入内容"
         ></el-input>
       </el-form-item>
-      <el-form-item label="URL">
-        <el-input
-          v-model="queryData.queryData.url"
-          placeholder="请输入内容"
-        ></el-input>
+      <el-form-item label="角色类型">
+        <el-select v-model="queryData.queryData.type" placeholder="角色类型">
+          <el-option label="全部" value></el-option>
+          <el-option label="普通角色" :value="1"></el-option>
+          <el-option label="管理员角色" :value="2"></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="是否激活">
-        <el-select v-model="queryData.queryData.isactive" placeholder="是否激活">
+        <el-select
+          v-model="queryData.queryData.isactive"
+          placeholder="是否激活"
+        >
           <el-option label="全部" value></el-option>
           <el-option label="已激活" :value="1"></el-option>
           <el-option label="未激活" :value="0"></el-option>
@@ -52,54 +56,42 @@
     >
       <!-- <el-table-column type="selection" width="50" align="center"></el-table-column> -->
       <el-table-column
-        prop="id"
-        label="编号"
-        show-overflow-tooltip
-        align="center"
-      ></el-table-column>
-      <el-table-column
-        prop="code"
-        label="资源代码"
-        show-overflow-tooltip
-        align="center"
-      ></el-table-column>
-      <el-table-column
         prop="name"
-        label="资源名称"
+        label="角色名称"
         show-overflow-tooltip
         align="center"
       ></el-table-column>
-      <el-table-column
-        prop="url"
-        label="资源路径"
-        show-overflow-tooltip
-        align="center"
-      ></el-table-column> 
-      <el-table-column label="所属菜单" show-overflow-tooltip align="center">
+      <el-table-column label="角色类型" show-overflow-tooltip align="center">
         <template slot-scope="scope">
-          <el-tag :type="'success'" disable-transitions >{{scope.row.menuId | getMenuFilter(menuList)}}</el-tag>
+          <el-tag :type="'success'" disable-transitions>{{
+            scope.row.type | typeCodeToString
+          }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column        
-        label="是否激活"
+      <el-table-column
+        prop="sort"
+        label="排序"
         show-overflow-tooltip
         align="center"
-      >
+      ></el-table-column>
+      <el-table-column label="是否激活" show-overflow-tooltip align="center">
         <template slot-scope="scope">
           <el-tag
             :type="scope.row.isactive == 1 ? 'success' : 'danger'"
             disable-transitions
-          >{{scope.row.isactive==1 ? '已激活' : '未激活'}}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="请求类型" show-overflow-tooltip align="center">
-        <template slot-scope="scope">
-          <el-tag :type="'success'" disable-transitions >{{scope.row.request.toUpperCase()}}</el-tag>
+            >{{ scope.row.isactive == 1 ? "已激活" : "未激活" }}</el-tag
+          >
         </template>
       </el-table-column>
       <el-table-column label="操作" width="250" align="center">
         <!-- fixed="right"  -->
         <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="primary"
+            @click="handlePrivilegeAllocate(scope.$index, scope.row)"
+            >权限分配</el-button
+          >
           <el-button
             size="mini"
             type="success"
@@ -132,13 +124,13 @@
     </div>
 
     <!-- 弹窗-添加 -->
-    <resource-detail
+    <role-detail
       :visible="dialogAddVisible"
       :isEdit="false"
       @close="dialogCloce"
     />
     <!-- 弹窗-修改 -->
-    <resource-detail
+    <role-detail
       :visible="dialogEditVisible"
       :isEdit="true"
       @close="dialogCloce"
@@ -148,13 +140,12 @@
 </template>
 
 <script>
-import { fetchList, deleteResource } from "@/api/resource";
-import { listAll } from "@/api/menu";
-import ResourceDetail from "./resourceDetail";
+import { fetchList, deleteRole, getPrivilegeAllocate } from "@/api/role";
+import RoleDetail from "./roleDetail";
 
 export default {
-  name: "Resource",
-  components: { ResourceDetail },
+  name: "Roles",
+  components: { RoleDetail },
   props: [],
   data() {
     return {
@@ -165,7 +156,7 @@ export default {
         //查询条件
         queryData: {
           name: "",
-          url: "",
+          type: "",
           isactive: "",
         },
       },
@@ -178,7 +169,6 @@ export default {
       },
       tableData: null, //表
       multipleSelection: [], //选择的数据
-      menuList: []  //菜单列表
     };
   },
   watch: {},
@@ -201,7 +191,7 @@ export default {
     deleteRow(index, rows) {
       //删除单条数据按钮
       this.$confirm("是否确认删除？").then(() => {
-        deleteResource(rows.id).then((response) => {
+        deleteRole(rows.id).then((response) => {
           if (response.code == 200) {
             this.$message({
               message: "删除成功",
@@ -234,7 +224,7 @@ export default {
       //修改按钮
       this.dialogEditVisible = true;
       this.$refs.edit.id = id;
-      this.$refs.edit.editGetResource();
+      this.$refs.edit.editGetRole();
     },
     handleSelectionChange(val) {
       //多选
@@ -253,25 +243,24 @@ export default {
       this.query();
       // console.log(`当前页: ${val}`);
     },
-    getMenuListAll(){ //获取所有菜单
-      listAll().then((response)=>{
-        this.menuList = response.data;
-      })
-    }
+    handlePrivilegeAllocate(index, row) {
+      //权限分配按钮
+      this.$router.push({path:'/manage/organization/privilegeAllocate',query:{roleId:row.id}})
+    },
   },
   created() {
     this.query();
-    this.getMenuListAll();
+    getPrivilegeAllocate().then(response => {console.log(response.data)})
   },
   filters: {
-    getMenuFilter(val,menuList){ //得到对应的所属菜单中文
-      let menuName = menuList.find(function(item){
-        return item.id==val;
-      })
-      if(menuName!=null){
-        return menuName.title;
+    typeCodeToString(val) {
+      //得到对应的权限类型中文
+      if (val === 1) {
+        return "普通角色";
+      } else if (val == 2) {
+        return "管理员角色";
       }
-    }
+    },
   },
 };
 </script>

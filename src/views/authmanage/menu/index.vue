@@ -21,6 +21,20 @@
           <el-button type="primary" @click="query">查询</el-button>
         </el-form-item>
       </div>
+      <Dropdown height="60px">
+        <el-form-item label="所属模块">
+        <el-select v-model="queryData.queryData.moduleId" placeholder="菜单级数">
+          <el-option label="全部" value></el-option>
+          <el-option
+              v-for="item in selectModuleList"
+              :key="item.name"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+        </el-select>
+      </el-form-item>
+      </Dropdown>
     </el-form>
 
     <el-row>
@@ -168,10 +182,12 @@
 <script>
 import { fetchList, deleteMenu, updateHidden } from "@/api/menu";
 import MenuDetail from "./menuDetail";
+import Dropdown from "@/components/dropdown/index";
+import { fetchList as fetchModules } from '@/api/module';
 
 export default {
   name: "Menu",
-  components: { MenuDetail },
+  components: { MenuDetail,Dropdown },
   props: [],
   data() {
     return {
@@ -184,6 +200,7 @@ export default {
           title: null,
           level: 0,
           pid: "0",
+          moduleId: "",
         },
       },
       pageNation: {
@@ -195,6 +212,7 @@ export default {
       },
       tableData: null, //表
       multipleSelection: [], //选择的数据
+      selectModuleList: []  //所属模块下拉列表
     };
   },
   watch: {
@@ -293,9 +311,17 @@ export default {
         })
         .finally(() => (this.loading = false));
     },
+    getSelectModuleList() {
+      //获取模块下拉列表
+      fetchModules({queryData:{ isactive: 1}, pageSize: 100, pageNum: 1 }).then((response) => {
+        this.selectModuleList = response.data.list;
+        // this.selectMenuList.unshift({ id: "0", title: "无上级菜单" });
+      });
+    },
   },
   created() {
     this.query();
+    this.getSelectModuleList();
   },
   filters: {
     levelFilter(value) {

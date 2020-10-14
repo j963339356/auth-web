@@ -1,5 +1,12 @@
 import request from '@/utils/request'
 
+export function listAll(){
+  return request({
+    url: '/api/menu/listAll',
+    method: 'get'
+  })
+}
+
 export function fetchList(params) {
   return request({
     url: '/api/menu/list',
@@ -46,9 +53,9 @@ export function updateHidden(id, params) {
   })
 }
 
-export function fetchTreeList() {
+export function fetchTreeList(id="0") {
   return request({
-    url: '/api/menu/treeList',
+    url: '/api/menu/treeList/' + id,
     method: 'get'
   })
 }

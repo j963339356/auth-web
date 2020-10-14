@@ -1,13 +1,24 @@
 <template>
   <!-- 添加菜单 -->
   <div>
-    <el-dialog title="添加菜单" :visible="visible" :before-close="handleClose">
+    <el-dialog title="添加菜单" :visible="visible" :before-close="handleClose" width="40%">
       <el-form :model="menu" ref="menuFrom" label-width="150px" :rules="rules">
         <el-form-item label="编号" prop="id" required>
-          <el-input v-model="menu.id"></el-input>
+          <el-input v-model="menu.id" class="input-width"></el-input>
         </el-form-item>        
         <el-form-item label="菜单名称" prop="title" required>
-          <el-input v-model="menu.title"></el-input>
+          <el-input v-model="menu.title" class="input-width"></el-input>
+        </el-form-item>
+        <el-form-item label="所属模块" required>
+          <el-select v-model="menu.moduleId" placeholder="请选择菜单">
+            <el-option
+              v-for="item in selectModuleList"
+              :key="item.name"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="上级菜单">
           <el-select v-model="menu.pid" placeholder="请选择菜单">
@@ -21,10 +32,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="前端名称">
-          <el-input v-model="menu.name"></el-input>
+          <el-input v-model="menu.name" class="input-width"></el-input>
         </el-form-item>
         <el-form-item label="前端图标">
-          <el-input v-model="menu.icon" style="width: 80%"></el-input>
+          <el-input v-model="menu.icon" class="input-width"></el-input>
           <i style="margin-left: 8px" :class="menu.icon"></i>
         </el-form-item>
         <el-form-item label="是否显示" required>
@@ -35,7 +46,7 @@
           ></el-switch>
         </el-form-item>
         <el-form-item label="排序">
-          <el-input v-model="menu.sort"></el-input>
+          <el-input v-model="menu.sort" class="input-width"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -48,12 +59,14 @@
 
 <script>
   import {fetchList, createMenu, updateMenu, getMenu} from '@/api/menu';
+  import { fetchList as fetchModules } from '@/api/module';
 
 //默认
 const defaultMenu = {
   id: "",
   title: "",
-  pid: 0,
+  pid: "0",
+  moduleId: 1,
   name: "",
   icon: "",
   hidden: 1,
@@ -81,6 +94,7 @@ export default {
       id: null, //打开窗口时查询的id
       menu: Object.assign({}, defaultMenu),
       selectMenuList: [],
+      selectModuleList: [],
       rules: {
         title: [
           { required: true, message: "请输入菜单名称", trigger: "blur" },
@@ -116,9 +130,15 @@ export default {
     if(!this.isEdit) {
       this.menu = Object.assign({}, defaultMenu);
     }
-    this.getSelectMenuList();
   },
-  watch: {},
+  watch: {
+    visible: function(val){
+      if(val){
+        this.getSelectMenuList();
+        this.getSelectModuleList();
+      }
+    }
+  },
   computed: {},
   methods: {
     handleClose(done) {
@@ -133,11 +153,18 @@ export default {
         })
         .finally(() => {});
     },
+    getSelectModuleList() {
+      //获取模块下拉列表
+      fetchModules({queryData:{ isactive: 1}, pageSize: 100, pageNum: 1 }).then((response) => {
+        this.selectModuleList = response.data.list;
+        // this.selectMenuList.unshift({ id: "0", title: "无上级菜单" });
+      });
+    },
     getSelectMenuList() {
       //获取上级菜单下拉列表
       fetchList({queryData:{ pid: "0"}, pageSize: 100, pageNum: 1 }).then((response) => {
         this.selectMenuList = response.data.list;
-        this.selectMenuList.unshift({ id: 0, title: "无上级菜单" });
+        this.selectMenuList.unshift({ id: "0", title: "无上级菜单" });
       });
     },
     handleSave() {
@@ -196,4 +223,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+.input-width {
+  width: 300px;
+}
 </style>

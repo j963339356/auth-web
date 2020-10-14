@@ -86,8 +86,15 @@ export const asyncRouterMap = [
     {
       path: 'roles',
       name: 'Roles',
-      component: () => import('@/views/organization/roles'),
+      component: () => import('@/views/organization/roles/index'),
       meta: { title: '角色管理', icon: 'el-icon-s-custom' }
+    },
+    {
+      path: 'privilegeAllocate',
+      name: 'PrivilegeAllocate',
+      component: () => import('@/views/organization/roles/privilegeAllocate'),
+      meta: { title: '角色管理', icon: 'el-icon-s-custom' },
+      hidden: true
     }]
   },
   {
@@ -96,6 +103,12 @@ export const asyncRouterMap = [
     component: Layout,
     meta: { title: '权限管理', icon: 'el-icon-wind-power', isDirect: true },
     children: [{
+      path: 'module',
+      name: 'Module',
+      component: () => import('@/views/authmanage/module/index'),
+      meta: { title: '模块管理', icon: 'el-icon-bank-card' }
+    },
+    {
       path: 'menu',
       name: 'Menu',
       component: () => import('@/views/authmanage/menu/index'),
