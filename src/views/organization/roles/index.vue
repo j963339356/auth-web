@@ -140,7 +140,7 @@
 </template>
 
 <script>
-import { fetchList, deleteRole, getPrivilegeAllocate } from "@/api/role";
+import { fetchList, deleteRole, fetchPrivilegeAllocate } from "@/api/role";
 import RoleDetail from "./roleDetail";
 
 export default {
@@ -250,7 +250,7 @@ export default {
   },
   created() {
     this.query();
-    getPrivilegeAllocate().then(response => {console.log(response.data)})
+    fetchPrivilegeAllocate().then(response => {console.log(response.data)})
   },
   filters: {
     typeCodeToString(val) {

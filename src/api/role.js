@@ -38,7 +38,7 @@ export function getRole(id) {
   })
 }
 
-export function getPrivilegeAllocate(){
+export function fetchPrivilegeAllocate(){
   return request({
     url: '/api/role/getPrivilegeAllocate',
     method: 'get'
