@@ -45,3 +45,18 @@ export function fetchPrivilegeAllocate(){
   })
 }
 
+export function grantPrivileges(roleId,privileges){
+  return request({
+    url: '/api/role/grantPrivileges/' + roleId,
+    method: 'post',
+    data: privileges
+  })
+}
+
+export function hasGrantPrivileges(roleId){
+  return request({
+    url: '/api/role/hasGrantPrivileges/' + roleId,
+    method: 'get'
+  })
+}
+

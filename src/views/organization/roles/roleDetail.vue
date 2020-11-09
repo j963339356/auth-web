@@ -19,7 +19,6 @@
         <el-form-item label="排序" prop="sort" required>
           <el-input v-model="role.sort" class="input-width"></el-input>
         </el-form-item>
-        </el-form-item>
         <el-form-item label="是否激活" required>
           <el-switch
             v-model="role.isactive"

@@ -24,13 +24,17 @@
                 </el-row>
             </div>
         </div>
-      </div>  
+      </div> 
+      </div> 
+      <div class="card-footer">
+            <el-button @click="handleClose">取 消</el-button>
+            <el-button type="primary" @click="handleSave">保存</el-button>
       </div>      
   </el-card>
 </template>
 
 <script>
-import { fetchPrivilegeAllocate } from '@/api/role';
+import { fetchPrivilegeAllocate, grantPrivileges, hasGrantPrivileges } from '@/api/role';
 
 export default {
   name:'PrivilegeAllocate',
@@ -49,6 +53,38 @@ export default {
   watch: {},
   computed: {},
   methods: {
+      handleClose(done) {
+      //取消
+        this.$confirm("确认关闭？")
+          .then(() => {
+            this.$router.back();
+          })
+          .catch((_) => {
+            console.log(_);
+          })
+          .finally(() => {});
+      },
+      handleSave() {
+          //保存
+            this.$confirm("是否提交数据", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "warning",
+            }).then(() => {
+                grantPrivileges(this.roleId, this.resourcePrivileges.filter(item => item.checked)).then(
+                  (response) => {
+                    this.$message({
+                      message: "修改成功",
+                      type: "success",
+                      duration: 1000,
+                    });
+                    this.$router.back();
+                  }
+                );
+            }).catch(err =>{
+                console.log(err)
+            });
+      },
       menuPrivilegesByModule(val){
           //通过模块获取一级菜单
           return this.menuPrivileges.filter(item => item.moduleId == val.id);
@@ -70,7 +106,29 @@ export default {
               this.menuPrivileges = data.filter(item => item.type==1)
               this.menu2Privileges = data.filter(item => item.type==2)
               this.resourcePrivileges = data.filter(item => item.type==3)
+              this.getGrantPrivilege()
           })
+      },
+      getGrantPrivilege(){
+          //获取已分配的资源
+          hasGrantPrivileges(this.roleId).then(response => {
+              this.resourcePrivileges.forEach(item => {
+                  response.data.forEach(data => {
+                      if(item.id==data.resourceId){
+                          item.checked = true
+                      }
+                  })
+              })
+              //改变其他菜单状态
+                this.menu2Privileges.forEach(item => {
+                    //根据验证选择二级菜单
+                    this.checkMenu2(item.id)
+                    //根据验证选择一级菜单
+                    this.checkMenu(item.pid)
+                    //根据验证选择模块         
+                    this.checkModule(item.moduleId)  
+                })
+          })          
       },
       moduleIndeterminage(modules){
           //模块菜单介于全选和非选中的状态
@@ -148,16 +206,7 @@ export default {
           let menu = this.getMenuFromMenu2(menu2)
                           
           //判断二级菜单是否被选择
-          let resourceChecks =  this.isResourceChecks(resource.pid)
-          for(let i=0; i<this.menu2Privileges.length; i++){
-              if(this.menu2Privileges[i].id==resource.pid){
-                  if(resourceChecks==1 || resourceChecks==2){
-                      this.menu2Privileges[i].checked = true
-                  }else{
-                      this.menu2Privileges[i].checked = false
-                  }
-              }
-          }
+          this.checkMenu2(resource.pid)
           //根据验证选择一级菜单
           this.checkMenu(menu.id)
           //根据验证选择模块         
@@ -212,6 +261,19 @@ export default {
               return 1
           }else{    //部分选择
               return 2
+          }
+      },
+      checkMenu2(menu2Id){
+          //根据验证选择二级菜单
+          let resourceChecks =  this.isResourceChecks(menu2Id)
+          for(let i=0; i<this.menu2Privileges.length; i++){
+              if(this.menu2Privileges[i].id==menu2Id){
+                  if(resourceChecks==1 || resourceChecks==2){
+                      this.menu2Privileges[i].checked = true
+                  }else{
+                      this.menu2Privileges[i].checked = false
+                  }
+              }
           }
       },
       checkMenu(menuId){
@@ -304,5 +366,9 @@ export default {
     }
     .menu2-card{
         background: #d0dee7;
+    }
+    .card-footer{
+        text-align: center;
+        margin: 40px 0 0 0;
     }
 </style>
